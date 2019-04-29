@@ -1,46 +1,71 @@
+import os
+import json
+import unicodedata
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
+from . import settings
+import config
 
 PAGE_URL = 'https://2gis.kg'
+PAGE_URL_SCELETON = 'https://2gis.kg/bishkek/search/{}/page/{}'
+CATEGORIES_PATH = os.path.join(config.basedir, 'data', 'categories.json')
 
-# options = webdriver.ChromeOptions()
-# prefs = {'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'javascript': 2, 
-#                             'plugins': 2, 'popups': 2, 'geolocation': 2, 
-#                             'notifications': 2, 'auto_select_certificate': 2, 'fullscreen': 2, 
-#                             'mouselock': 2, 'mixed_script': 2, 'media_stream': 2, 
-#                             'media_stream_mic': 2, 'media_stream_camera': 2, 'protocol_handlers': 2, 
-#                             'ppapi_broker': 2, 'automatic_downloads': 2, 'midi_sysex': 2, 
-#                             'push_messaging': 2, 'ssl_cert_decisions': 2, 'metro_switch_to_desktop': 2, 
-#                             'protected_media_identifier': 2, 'app_banner': 2, 'site_engagement': 2, 
-#                             'durable_storage': 2}}
-# options.add_experimental_option('prefs', prefs)
-# options.add_argument("start-maximized")
-# options.add_argument("disable-infobars")
-# options.add_argument("--disable-extensions")
+driver = webdriver.Chrome(ChromeDriverManager().install()) 
+
+def parse_category(category):
+    page = 1
+    while True:
+        driver.get(PAGE_URL_SCELETON.format(category, page))
+        parse_page(driver.page_source)
+        page+=1
+        if page ==2:
+            break # test
+
+def parse_page(html):
+    soup = BeautifulSoup(html, "html.parser")
+    link_tags = soup.find_all('a', href=lambda x: x and 'firm' in x 
+    and 'district' not in x and 'firms' not in x)
+    advert_urls = [url['href'] for url in link_tags]
+    adverts = []
+    for advert_url in advert_urls:
+        driver.get(PAGE_URL+advert_url)
+        adverts.append(parse_advert(driver.page_source))
+    return adverts
 
 
-def parse_ad(html):
+def parse_advert(html):
     soup = BeautifulSoup(html, 'html.parser')
     advert = {}
-    advert['title'] = soup.find('h1').text
-    advert['number'] =  list(set([contact['href'][4:] for contact in soup.find_all('a', href = lambda x: x and 'tel:' in x)]))
+    title = soup.find('h1')
+    advert['title'] = title.text if title else None
+    numbers = soup.find_all('a', href = lambda x: x and 'tel:' in x)
+    advert['numbers'] = list(set([number['href'][4:] for number in numbers]))
+    address = soup.find('a', lambda x: x and 'address' in x)
+    advert['address'] = unicodedata.normalize("NFKD", address.text) if address else None
+    instagram = soup.find('a', lambda x: x and 'instagram' in x)
+    advert['instagram'] = instagram['href'] if instagram else None
+    email = soup.find('a', href = lambda x: x and 'mailto:' in x)
+    advert['email'] = email.text if email else None
+    website = soup.find('a', lambda x: x and 'website' in x) or \
+        soup.find('a', lambda x: x and 'contact' in x,\
+             href = lambda x: x and ('http' in x or 'https' in x))
+    website_url = website['href'].split("://") if website else None 
+    advert['website'] = website_url[-1] if website_url \
+        and len(website_url) > 2 else None
+    print(advert)
     return advert
 
 
 if __name__ == '__main__':
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
-    driver.get(f'https://2gis.kg/bishkek/search/Поесть/page/1')
-    html = driver.page_source
-    soup = BeautifulSoup(html, "html.parser")
-    media_cards = [cards for cards in soup.find_all('a') if cards.has_attr('href')]
-    urls = [card['href'] for card in media_cards if 'firm' in card['href'] and 'district' not in card['href']]
-    for ad_url in urls:
-        driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
-        driver.get(PAGE_URL+ad_url)
-        parse_ad(driver.page_source)
+    with open(CATEGORIES_PATH) as json_file:
+        data = json.load(json_file)
+    categories = data['all_categories']
+    for category in categories:
+        parse_category(category)
+
 
 
 
