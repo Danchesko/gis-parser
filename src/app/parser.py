@@ -45,7 +45,9 @@ class Parser:
         business_urls = [url['href'] for url in link_tags]
         for business_url in business_urls:
             self.driver.get(constants.PAGE_URL+business_url)
-            businesses.append(self.parse_business_contents(self.driver.page_source))
+            business = self.parse_business_contents(self.driver.page_source)
+            business[Business.URL] = business_url
+            businesses.append(business)
         return businesses
 
 
@@ -68,5 +70,5 @@ class Parser:
         website_url = website['href'].split("://") if website else None 
         business[Business.WEBSITE] = website_url[-1] if website_url \
             and len(website_url) > 2 else None
-        business[Business.HTML] = soup.find('body')
+        business[Business.HTML] = str(soup.find('body'))
         return business
