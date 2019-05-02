@@ -5,21 +5,19 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class DoubleGis(Base):
     __tablename__='doublegis'
-    id = Column(Integer, primary_key = True)
+
+    url = Column(String, primary_key=True, nullable=False)
     title = Column(String)
     numbers = Column(ARRAY(String))
     address = Column(String)
-    url = Column(String)
+    instagram = Column(String)
     email = Column(String)
     website = Column(String)
-
-class DoubleGisBody(Base):
-    __tablename__='doublegis-html'
-    id = Column(Integer, primary_key=True)
-    parent_id=Column(Integer, ForeignKey('doublegis.id'))
     html = Column(String)
+    
 
 
 
