@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 
-from src import settings
+from . import settings
 from .constants import Ad
 from . import constants
 
