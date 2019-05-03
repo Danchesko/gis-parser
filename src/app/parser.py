@@ -19,7 +19,7 @@ def get_next_page(html):
     return next_page_url
 
 
-def get_business_urls(self, html):
+def get_business_urls(html):
     soup = BeautifulSoup(html, "html.parser")
     link_tags = soup.find_all('a', href=lambda x: x and 'firm' in x 
     and 'district' not in x and 'firms' not in x)
@@ -27,7 +27,7 @@ def get_business_urls(self, html):
     return business_urls
 
 
-def get_business_contents(self, html):
+def get_business_contents(html):
     soup = BeautifulSoup(html, 'html.parser')
     business = {}
     title = soup.find('h1')
