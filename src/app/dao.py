@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from .models import DoubleGis
 from .constants import Business
-from .logging import logger, log_messages
+from .logging import db_logger, log_messages
 
 class DAO():
 
@@ -19,12 +19,13 @@ class DAO():
                                     email=business[Business.EMAIL],
                                     website=business[Business.WEBSITE],
                                     html=business[Business.HTML],
-                                    url=business[Business.URL])
+                                    url=business[Business.URL],
+                                    category=business[Business.CATEGORY])
         try:        
             self.session.add(_business)
             self.session.commit()
         except Exception:
-            logger.logger.exception(log_messages.WRITE_ERROR)
+            db_logger.logger.exception(log_messages.WRITE_ERROR)
             self.session.rollback()
 
 
