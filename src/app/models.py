@@ -17,6 +17,7 @@ class DoubleGis(Base):
     email = Column(String)
     website = Column(String)
     html = Column(String)
+    category = Column(String)
     
 
 
