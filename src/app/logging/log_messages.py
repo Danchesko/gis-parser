@@ -1,0 +1,1 @@
+WRITE_ERROR = 'Unknown error when writing new record'
