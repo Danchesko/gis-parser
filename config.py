@@ -8,3 +8,5 @@ database_url = os.environ.get('DATABASE_URL')
 
 categories_path = os.path.join(basedir, 'data', 'categories.json')
 
+logs_path = os.path.join(basedir, 'logs')
+
