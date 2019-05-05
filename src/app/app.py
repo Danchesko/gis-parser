@@ -15,23 +15,27 @@ from .logging import parse_logger, log_messages
 
 
 engine = create_engine(config.database_url)
-parser_booster = os.environ.get('env') == 'prod' 
-driver_options = settings.options if parser_booster else None
-driver = webdriver.Chrome(config.chrome_driver_path, chrome_options=driver_options)
+driver = webdriver.Chrome(config.chrome_driver_path, chrome_options=settings.driver_options)
 
 all_categories_path = os.path.join(config.data_path, 'all_categories.json')
 parsed_categories_path = os.path.join(config.data_path, 'parsed_categories.json')
 last_parsed_data_path = os.path.join(config.data_path, 'last_parsed_data.json')
 
+
 class App:
 
     def __init__(self):
         self.parsed_categories = []
-        self.category_page = 1
+        self.current_category_page = 1
+        self.current_category_name = ''
 
 
     def run(self):
-        self.parse_all()
+        try:
+            self.parse_all()
+        except Exception:
+            parse_logger.logger.exception(log_messages.PARSE_ERROR.format(self.current_category_name, self.current_category_page))
+            self.save_last_parsed_data()
 
 
     def parse_all(self):
@@ -43,23 +47,20 @@ class App:
         categories = self.get_categories()
 
         if last_page:
+            categories.remove(last_category)
             categories.insert(0, last_category)
-            self.category_page = last_page
+            self.current_category_page = last_page
 
-        for category in categories:
-            try:
-                self.parse_category(category)
-            except Exception:
-                parse_logger.logger.exception(log_messages.PARSE_ERROR.format(category, self.category_page))
-                self.make_last_parsed_data(category, self.category_page)
-                break
-            else:
-                self.parsed_categories.append(category)
+        for self.current_category_name in categories:
+                self.parse_category()            
+                self.parsed_categories.append(self.current_category_name)
                 self.save_parsed_categories()
+                
+           
 
 
-    def parse_category(self, category):
-        driver.get(constants.PAGE_URL_SCELETON.format(category, self.category_page))
+    def parse_category(self):
+        driver.get(constants.PAGE_URL_SCELETON.format(self.current_category_name, self.current_category_page))
         html = driver.page_source
         while True :
             business_urls = parser.get_business_urls(html)
@@ -69,16 +70,16 @@ class App:
                     driver.get(constants.PAGE_URL+business_url)
                     business = parser.get_business_contents(driver.page_source)
                     business[constants.Business.URL] = business_url
-                    business[constants.Business.CATEGORY] = category
+                    business[constants.Business.CATEGORY] = self.current_category_name
                     db.add(business)
             next_page_url = parser.get_next_page(html) 
             if not next_page_url:
-                self.category_page = 1
+                self.current_category_page = 1
                 break
             else:
                 driver.get(constants.PAGE_URL + next_page_url)
                 html = driver.page_source
-                self.category_page+=1
+                self.current_category_page+=1
 
 
     def get_last_parsed_data(self):
@@ -86,6 +87,7 @@ class App:
             with open(last_parsed_data_path) as json_file:
                 data = json.load(json_file)
             return data
+
 
     def get_categories(self):
 
@@ -101,8 +103,8 @@ class App:
         return list(set(all_categories)-set(self.parsed_categories))
 
 
-    def make_last_parsed_data(self, category, page):
-        data = {'last_category':category, 'last_page':page}
+    def save_last_parsed_data(self):
+        data = {'last_category':self.current_category_name, 'last_page':self.current_category_page}
         with open(last_parsed_data_path, 'w') as outfile:
             json.dump(data, outfile)
 
