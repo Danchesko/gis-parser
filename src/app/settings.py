@@ -1,4 +1,7 @@
+import os
+
 from selenium import webdriver
+
 
 options = webdriver.ChromeOptions()
 prefs = {'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'javascript': 2, 
@@ -14,3 +17,6 @@ options.add_experimental_option('prefs', prefs)
 options.add_argument("start-maximized")
 options.add_argument("disable-infobars")
 options.add_argument("--disable-extensions")
+
+parser_booster = os.environ.get('env') == 'prod' 
+driver_options = options if parser_booster else None
