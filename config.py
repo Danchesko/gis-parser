@@ -10,3 +10,5 @@ data_path = os.path.join(basedir, 'data')
 
 logs_path = os.path.join(basedir, 'logs')
 
+chrome_remote_url = os.environ.get('CHROME_REMOTE_URL')
+
