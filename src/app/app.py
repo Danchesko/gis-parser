@@ -2,6 +2,7 @@ import json
 import os
 import sys
 
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sqlalchemy import create_engine
 from selenium import webdriver
 
@@ -15,7 +16,7 @@ from .logging import parse_logger, log_messages
 
 
 engine = create_engine(config.database_url)
-driver = webdriver.Chrome(config.chrome_driver_path, chrome_options=settings.driver_options)
+driver = webdriver.Remote(config.chrome_remote_url, DesiredCapabilities.CHROME)
 
 all_categories_path = os.path.join(config.data_path, 'all_categories.json')
 parsed_categories_path = os.path.join(config.data_path, 'parsed_categories.json')
