@@ -7,5 +7,9 @@ COPY . .
 RUN pip install -r requirements.txt
 
 ENV PYTHONPATH="$PYTHONPATH:/parser"
-ENV DATABASE_URL="postgresql://localhost/parser"
-ENV CHROME_REMOTE_URL="http://127.0.0.1:4444/wd/hub"
+ENV DATABASE_URL="postgresql://danberd@host.docker.internal/parser"
+ENV CHROME_REMOTE_URL="http://host.docker.internal:4444/wd/hub"
+
+RUN alembic upgrade head
+
+CMD ["python", "src/main.py"]
