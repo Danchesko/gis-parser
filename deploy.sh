@@ -3,29 +3,30 @@
 project_name=parser
 selenium=selenium/standalone-chrome
 
-echo deleting container if exists
+echo DELETING CONTAINER IF EXISTS
 docker container rm -f $project_name
 
-echo deleting image if exists 
+echo DELETING IMAGE IF EXISTS 
 docker image rm $(docker image ls -q $project_name | uniq)
 
-echo building new image 
+echo BUILDING NEW IMAGE 
 docker build -t $project_name .
 
-echo delete selenium if exists
+echo DELETE SELENIUM IF EXISTS
 docker container rm -f `docker ps -a -q  --filter ancestor=$selenium`
 
-echo running selenium standalone chrome
+echo RUNNING SELENIUM STANDALONE CHROME
 docker run -p 4444:4444 -d $selenium
 
-echo wait for selenium to run
+echo WAIT FOR SELENIUM TO RUN
 sleep 10
 
-echo running project 
+echo RUNNING PROJECT 
 while ! docker run --name=$project_name --net=host -it --rm $project_name
 do
-    echo apparently selenium crashed, booting it up again
+    echo APPARENTLY SELENIUM CRASHED, BOOTING IT UP AGAIN
     docker container rm -f `docker ps -a -q  --filter ancestor=$selenium`
     docker run -p 4444:4444 -d $selenium
+    echo RESTARTING A PROJECT
     sleep 10
 done
