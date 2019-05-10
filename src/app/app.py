@@ -37,7 +37,7 @@ class App:
         except Exception:
             parse_logger.logger.exception(log_messages.PARSE_ERROR.format(self.current_category_name, self.current_category_page))
             self.save_last_parsed_data()
-
+            sys.exit(1)
 
     def parse_all(self):
         
