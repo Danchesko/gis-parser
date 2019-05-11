@@ -21,8 +21,10 @@ docker run -p 4444:4444 -d $selenium
 echo WAIT FOR SELENIUM TO RUN
 sleep 10
 
+docker create --name=$project_name --net=host -it $project_name
+
 echo RUNNING PROJECT 
-while ! docker run --name=$project_name --net=host -it --rm $project_name
+while ! docker start $project_name
 do
     echo APPARENTLY SELENIUM CRASHED, BOOTING IT UP AGAIN
     docker container rm -f `docker ps -a -q  --filter ancestor=$selenium`
@@ -30,3 +32,5 @@ do
     echo RESTARTING A PROJECT
     sleep 10
 done
+
+echo PARSING IS COMPLETE
