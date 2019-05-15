@@ -15,7 +15,10 @@ def get_next_page(html):
     soup = BeautifulSoup(html, 'html.parser')
     current_page = soup.find('span', lambda x: x and 'pagination' in x and x.endswith('current'))
     next_page = current_page.find_next() if current_page else None
-    next_page_url = next_page['href'] if next_page.has_attr('href') else None
+    try:
+        next_page_url = next_page['href']
+    except:
+        next_page_url=None
     return next_page_url
 
 
